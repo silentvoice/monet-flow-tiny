@@ -15,6 +15,11 @@ if [[ -z "${PYTHON_BIN:-}" ]]; then
   fi
 fi
 
+if ! "$PYTHON_BIN" -m build --version >/dev/null 2>&1; then
+  echo "python module 'build' is required. Install with: python -m pip install -e \".[cloud]\"" >&2
+  exit 1
+fi
+
 "$PYTHON_BIN" -m build --sdist --no-isolation >&2
 PACKAGE_PATH="$(ls -t dist/monet_flow_tiny-*.tar.gz | head -n 1)"
 PACKAGE_URI="${DESTINATION_PREFIX}/packages/$(basename "$PACKAGE_PATH")"

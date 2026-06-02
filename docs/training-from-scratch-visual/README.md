@@ -9,6 +9,6 @@ Start here:
 Supporting files:
 
 - `assets/` contains the images and GIFs used by the article.
-- `scripts/make_visuals.py` regenerates the visual asset pack from the local experiment outputs.
+- The visual assets are checked in as static educational examples.
 
 The article is intentionally focused on the data, model, flow-matching intuition, Self-Flow-lite, and visual training progress so it can read as a simple educational post.

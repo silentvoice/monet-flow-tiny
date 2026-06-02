@@ -23,7 +23,9 @@ BOOT_DISK_SIZE="${BOOT_DISK_SIZE:-200GB}"
 PROVISIONING_MODEL="${PROVISIONING_MODEL:-SPOT}"
 MAX_RUN_DURATION="${MAX_RUN_DURATION:-14400s}"
 RUN_LABEL="${RUN_LABEL:-monet-flow}"
-SERVICE_ACCOUNT="${SERVICE_ACCOUNT:-}"
+SERVICE_ACCOUNT="${SERVICE_ACCOUNT:?Set SERVICE_ACCOUNT to the VM service-account email.}"
+ACCESS_SCOPES="${ACCESS_SCOPES:-storage-rw,logging-write}"
+SELF_DELETE_ON_SUCCESS="${SELF_DELETE_ON_SUCCESS:-false}"
 
 case "${ACCELERATOR_TYPE,,}" in
   none|null|false)
@@ -59,6 +61,7 @@ CONFIG_URI="${CONFIG_URI}"
 STAGING_BUCKET="${STAGING_BUCKET}"
 RUN_LABEL="${RUN_LABEL}"
 ZONE="${ZONE}"
+SELF_DELETE_ON_SUCCESS="${SELF_DELETE_ON_SUCCESS}"
 TRAIN_ARGS=(${TRAIN_ARGS_QUOTED})
 
 export PYTHONUNBUFFERED=1
@@ -120,7 +123,11 @@ set -e
 if [[ "\${TRAIN_STATUS}" -eq 0 ]]; then
   cleanup
   trap - EXIT
-  delete_self_after_success
+  if [[ "\${SELF_DELETE_ON_SUCCESS}" == "true" ]]; then
+    delete_self_after_success
+  else
+    shutdown -h now
+  fi
 fi
 
 exit "\${TRAIN_STATUS}"
@@ -135,7 +142,8 @@ CREATE_ARGS=(
   "--image-project=$IMAGE_PROJECT"
   "--boot-disk-size=$BOOT_DISK_SIZE"
   "--metadata-from-file=startup-script=$STARTUP_SCRIPT"
-  "--scopes=cloud-platform"
+  "--scopes=$ACCESS_SCOPES"
+  "--service-account=$SERVICE_ACCOUNT"
   "--maintenance-policy=TERMINATE"
   "--max-run-duration=$MAX_RUN_DURATION"
   "--instance-termination-action=DELETE"
@@ -144,10 +152,6 @@ CREATE_ARGS=(
 
 if [[ -n "$ACCELERATOR_TYPE" ]]; then
   CREATE_ARGS+=("--accelerator=type=${ACCELERATOR_TYPE},count=${ACCELERATOR_COUNT}")
-fi
-
-if [[ -n "$SERVICE_ACCOUNT" ]]; then
-  CREATE_ARGS+=("--service-account=$SERVICE_ACCOUNT")
 fi
 
 if [[ -n "$PROVISIONING_MODEL" ]]; then

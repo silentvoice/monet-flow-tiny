@@ -82,6 +82,9 @@ For optional cloud helpers:
 python -m pip install -e ".[cloud]"
 ```
 
+The cloud extra installs GCS support and the local package builder used by the
+GCE and Vertex helper scripts.
+
 ## Quick Start: Synthetic Smoke Test
 
 This creates fake latent shards and trains for a few steps. It does not download MONET or decode images.
@@ -110,6 +113,11 @@ checkpoints/
 ## Prepare A Small MONET Subset
 
 MONET includes precomputed SANA DC-AE latents. This project trains on those latents so the generator can be small and understandable.
+
+Before downloading MONET, review the dataset card and license terms linked in
+[docs/sources.md](docs/sources.md). If Hugging Face requires authentication in
+your environment, log in with the Hugging Face CLI or set `HF_TOKEN` before
+running the preparation script.
 
 Install data dependencies:
 
@@ -278,6 +286,10 @@ scripts/launch_gce_training.sh \
   gs://YOUR_BUCKET
 ```
 
+The GCE helper requires an explicit service account. Give that account only the
+storage/logging permissions it needs for your bucket and logs. Set
+`ACCESS_SCOPES` yourself if you intentionally need broader VM OAuth scopes.
+
 Submit a Vertex package job:
 
 ```bash
@@ -358,6 +370,12 @@ decoded = vae.decode(latents.float() / scaling_factor).sample
 ```
 
 If decoded images look washed out or incorrectly scaled, check this path first.
+
+## Sources And Attribution
+
+This repository uses MONET metadata/latents and compares against ideas from
+Self-Flow. See [docs/sources.md](docs/sources.md) for dataset, paper, and
+third-party project links. This repository does not redistribute MONET itself.
 
 ## License
 

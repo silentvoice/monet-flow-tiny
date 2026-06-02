@@ -7,16 +7,26 @@ BUCKET_NAME="${BUCKET_NAME:-${PROJECT_ID}-monet-flow-tiny}"
 REPOSITORY="${REPOSITORY:-monet-flow}"
 
 gcloud config set project "$PROJECT_ID"
-gcloud storage buckets create "gs://${BUCKET_NAME}" \
-  --project "$PROJECT_ID" \
-  --location "$REGION" \
-  --uniform-bucket-level-access || true
+if gcloud storage buckets describe "gs://${BUCKET_NAME}" --project "$PROJECT_ID" >/dev/null 2>&1; then
+  echo "bucket already exists: gs://${BUCKET_NAME}" >&2
+else
+  gcloud storage buckets create "gs://${BUCKET_NAME}" \
+    --project "$PROJECT_ID" \
+    --location "$REGION" \
+    --uniform-bucket-level-access
+fi
 
-gcloud artifacts repositories create "$REPOSITORY" \
+if gcloud artifacts repositories describe "$REPOSITORY" \
   --project "$PROJECT_ID" \
-  --repository-format docker \
-  --location "$REGION" \
-  --description "MONET Self-Flow-lite containers" || true
+  --location "$REGION" >/dev/null 2>&1; then
+  echo "artifact repository already exists: ${REPOSITORY}" >&2
+else
+  gcloud artifacts repositories create "$REPOSITORY" \
+    --project "$PROJECT_ID" \
+    --repository-format docker \
+    --location "$REGION" \
+    --description "MONET Self-Flow-lite containers"
+fi
 
 echo "bucket=gs://${BUCKET_NAME}"
 echo "artifact_repository=${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}"

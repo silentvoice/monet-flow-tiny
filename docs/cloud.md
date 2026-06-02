@@ -11,6 +11,12 @@ Cloud support is intentionally generic:
 
 Use your own project settings through environment variables.
 
+Install the cloud extra before using the package-build or GCS helpers:
+
+```bash
+python -m pip install -e ".[cloud]"
+```
+
 ## 1. Create A Bucket And Artifact Repository
 
 ```bash
@@ -56,6 +62,11 @@ PY
 
 ## 4. Launch A GCE Worker
 
+The GCE helper requires an explicit service account. Grant that account access
+to the training bucket and logs rather than relying on a default compute service
+account. The default OAuth scopes are `storage-rw,logging-write`; override
+`ACCESS_SCOPES` only when your launch path needs more.
+
 ```bash
 PROJECT_ID=YOUR_PROJECT_ID \
 SERVICE_ACCOUNT=YOUR_SERVICE_ACCOUNT_EMAIL \
@@ -66,6 +77,11 @@ scripts/launch_gce_training.sh \
   /tmp/baseline_gcs.yaml \
   gs://YOUR_BUCKET
 ```
+
+Successful jobs stop the VM by default. If you want the VM to delete itself
+after successful training, set `SELF_DELETE_ON_SUCCESS=true` and provide both
+the required IAM permission and an access scope that permits Compute Engine API
+calls.
 
 ## 5. Submit A Vertex Package Job
 
@@ -106,4 +122,3 @@ python scripts/sample_checkpoint_series.py \
   --guidance-scale 1.0 \
   --decode
 ```
-

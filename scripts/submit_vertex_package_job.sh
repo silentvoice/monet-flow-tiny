@@ -43,4 +43,5 @@ gcloud ai custom-jobs create \
   --worker-pool-spec "$WORKER_SPEC" \
   --python-package-uris "$PACKAGE_URI" \
   --args="$ARGS_CSV" \
-  --labels "project=monet-flow-tiny"
+  --labels "project=monet-flow-tiny" \
+  --staging-bucket "$STAGING_BUCKET"

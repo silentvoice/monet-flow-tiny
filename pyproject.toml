@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,8 +9,19 @@ description = "A tiny educational latent flow text-to-image trainer with a Self-
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
+license-files = ["LICENSE"]
 authors = [
   { name = "MONET Flow Tiny contributors" }
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence"
 ]
 keywords = [
   "text-to-image",
@@ -22,7 +33,6 @@ keywords = [
   "diffusion"
 ]
 dependencies = [
-  "google-cloud-storage>=2.18",
   "numpy>=1.26",
   "pyyaml>=6",
   "torch>=2.4",
@@ -31,6 +41,7 @@ dependencies = [
 
 [project.optional-dependencies]
 cloud = [
+  "build>=1.2",
   "google-cloud-storage>=2.18"
 ]
 data = [
