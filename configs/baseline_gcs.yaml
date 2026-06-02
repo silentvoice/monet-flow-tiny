@@ -1,0 +1,40 @@
+experiment:
+  name: monet_baseline_flow
+  output_dir: gs://REPLACE_WITH_BUCKET/runs/baseline
+  seed: 17
+
+data:
+  train_dir: gs://REPLACE_WITH_BUCKET/datasets/monet_10k/train
+  val_dir: gs://REPLACE_WITH_BUCKET/datasets/monet_10k/val
+  latent_channels: 32
+  latent_size: 16
+  text_dim: 512
+  num_workers: 4
+
+model:
+  hidden_size: 512
+  depth: 8
+  num_heads: 8
+  mlp_ratio: 4.0
+  dropout: 0.0
+  aux_layer: 4
+
+training:
+  max_steps: 100000
+  batch_size: 64
+  grad_accum_steps: 2
+  learning_rate: 0.0001
+  weight_decay: 0.05
+  precision: bf16
+  log_every: 25
+  save_every: 2500
+  val_every: 1000
+  max_grad_norm: 1.0
+
+self_flow_lite:
+  enabled: false
+  per_token_timesteps: false
+  mask_ratio: 0.0
+  masked_token_t: 1.0
+  aux_loss_weight: 0.0
+  aux_masked_only: true

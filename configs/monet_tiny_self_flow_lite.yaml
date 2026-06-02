@@ -1,0 +1,40 @@
+experiment:
+  name: monet_tiny_self_flow_lite
+  output_dir: outputs/monet_tiny_self_flow_lite
+  seed: 17
+
+data:
+  train_dir: data/processed/monet_tiny_train
+  val_dir: data/processed/monet_tiny_val
+  latent_channels: 32
+  latent_size: 16
+  text_dim: 512
+  num_workers: 0
+
+model:
+  hidden_size: 128
+  depth: 2
+  num_heads: 4
+  mlp_ratio: 4.0
+  dropout: 0.0
+  aux_layer: 1
+
+training:
+  max_steps: 20
+  batch_size: 8
+  grad_accum_steps: 1
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  precision: fp32
+  log_every: 2
+  save_every: 20
+  val_every: 10
+  max_grad_norm: 1.0
+
+self_flow_lite:
+  enabled: true
+  per_token_timesteps: true
+  mask_ratio: 0.25
+  masked_token_t: 1.0
+  aux_loss_weight: 0.1
+  aux_masked_only: true

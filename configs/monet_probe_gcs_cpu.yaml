@@ -1,0 +1,40 @@
+experiment:
+  name: monet_probe_cloud_cpu
+  output_dir: gs://REPLACE_WITH_BUCKET/runs/monet_probe_cloud_cpu
+  seed: 17
+
+data:
+  train_dir: gs://REPLACE_WITH_BUCKET/datasets/monet_probe
+  val_dir: gs://REPLACE_WITH_BUCKET/datasets/monet_probe
+  latent_channels: 32
+  latent_size: 16
+  text_dim: 512
+  num_workers: 0
+
+model:
+  hidden_size: 128
+  depth: 2
+  num_heads: 4
+  mlp_ratio: 4.0
+  dropout: 0.0
+  aux_layer: 1
+
+training:
+  max_steps: 2
+  batch_size: 4
+  grad_accum_steps: 1
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  precision: fp32
+  log_every: 1
+  save_every: 2
+  val_every: 2
+  max_grad_norm: 1.0
+
+self_flow_lite:
+  enabled: false
+  per_token_timesteps: false
+  mask_ratio: 0.0
+  masked_token_t: 1.0
+  aux_loss_weight: 0.0
+  aux_masked_only: true

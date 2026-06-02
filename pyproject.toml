@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "monet-flow-tiny"
+version = "0.1.0"
+description = "A tiny educational latent flow text-to-image trainer with a Self-Flow-lite ablation."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "MONET Flow Tiny contributors" }
+]
+keywords = [
+  "text-to-image",
+  "flow-matching",
+  "rectified-flow",
+  "self-flow",
+  "monet",
+  "pytorch",
+  "diffusion"
+]
+dependencies = [
+  "google-cloud-storage>=2.18",
+  "numpy>=1.26",
+  "pyyaml>=6",
+  "torch>=2.4",
+  "tqdm>=4.66"
+]
+
+[project.optional-dependencies]
+cloud = [
+  "google-cloud-storage>=2.18"
+]
+data = [
+  "datasets>=3.0",
+  "pyarrow>=17",
+  "transformers>=4.45"
+]
+decode = [
+  "diffusers>=0.35",
+  "pillow>=10",
+  "safetensors>=0.4",
+  "transformers>=4.45"
+]
+dev = [
+  "build>=1.2",
+  "datasets>=3.0",
+  "diffusers>=0.35",
+  "google-cloud-storage>=2.18",
+  "pillow>=10",
+  "pyarrow>=17",
+  "pytest>=8",
+  "ruff>=0.6",
+  "safetensors>=0.4",
+  "transformers>=4.45"
+]
+metrics = [
+  "torchmetrics[image]>=1.4"
+]
+tracking = [
+  "wandb>=0.17"
+]
+
+[project.urls]
+Homepage = "https://github.com/silentvoice/monet-flow-tiny"
+Repository = "https://github.com/silentvoice/monet-flow-tiny"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
