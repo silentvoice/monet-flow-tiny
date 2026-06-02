@@ -1,10 +1,16 @@
 # MONET Flow Tiny
 
-A tiny educational text-to-image training project.
+A small PyTorch project for studying latent flow text-to-image training.
 
-This repository trains a small latent flow model from scratch on MONET-style image latents, then compares it with a simplified Self-Flow-style ablation. It is designed for learning, debugging, and writing clear experiments, not for producing production image-generator quality.
+The repository trains a compact generator on MONET image latents and caption
+embeddings. It is meant to make the training stack inspectable: data shards,
+latent shapes, flow matching, sampling, prompt conditioning, checkpoint
+galleries, and a simple Self-Flow-lite ablation.
 
-The core idea:
+Read the visual walkthrough:
+[What training a tiny text-to-image model looks like](https://ankurbohra.com/notes/what-training-a-tiny-text-to-image-model-looks-like)
+
+The core path is:
 
 ```text
 caption -> frozen text embedding
@@ -17,37 +23,24 @@ noise + text + timestep
   -> image
 ```
 
-## What This Includes
+## What's Here
 
-- A minimal PyTorch latent flow trainer.
-- A small transformer over image-latent tokens.
-- Baseline rectified-flow / flow-matching objective.
-- Self-Flow-lite:
-  - per-token timesteps
-  - token masking / heavy corruption
-  - auxiliary clean-latent reconstruction loss
+- A minimal latent flow trainer in PyTorch.
+- A small DiT-style transformer over `32 x 16 x 16` image latents.
+- Baseline rectified-flow / flow-matching training.
+- Self-Flow-lite with per-token timesteps, masked corruption, and an auxiliary
+  reconstruction loss.
 - MONET subset preparation from Hugging Face datasets.
-- Toy-data smoke tests that run without external datasets.
-- Sampling, VAE decoding, checkpoint galleries, and conditioning diagnostics.
-- Optional GCS, GCE, and Vertex helper scripts using user-provided cloud settings.
-- A visual long-form article in [docs/training-from-scratch-visual/article.md](docs/training-from-scratch-visual/article.md).
-
-## What This Does Not Include
-
-- No private project ids.
-- No bucket names.
-- No service-account files.
-- No generated checkpoints.
-- No local dataset shards.
-- No published model weights.
-
-All cloud paths in configs use placeholders such as `gs://REPLACE_WITH_BUCKET/...`.
+- Synthetic smoke tests that run without external data.
+- Sampling, VAE decoding, checkpoint galleries, and prompt-conditioning
+  diagnostics.
+- Optional GCS, GCE, and Vertex helpers for user-provided cloud projects.
 
 ## Project Layout
 
 ```text
 configs/      Local and placeholder cloud training configs
-docs/         Educational article and visual assets
+docs/         Source notes and cloud setup notes
 scripts/      Data prep, sampling, diagnostics, and optional cloud helpers
 src/          Python package source
 tests/        Shape/objective tests
@@ -64,30 +57,34 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-For only the fastest local smoke test, the base install is enough:
+For the fastest local smoke test, the base install is enough:
 
 ```bash
 python -m pip install -e .
 ```
 
-For MONET data preparation and image decoding:
+For MONET data preparation:
 
 ```bash
-python -m pip install -e ".[data,decode]"
+python -m pip install -e ".[data]"
 ```
 
-For optional cloud helpers:
+For latent decoding:
+
+```bash
+python -m pip install -e ".[decode]"
+```
+
+For cloud helpers:
 
 ```bash
 python -m pip install -e ".[cloud]"
 ```
 
-The cloud extra installs GCS support and the local package builder used by the
-GCE and Vertex helper scripts.
+## Quick Smoke Test
 
-## Quick Start: Synthetic Smoke Test
-
-This creates fake latent shards and trains for a few steps. It does not download MONET or decode images.
+This creates fake latent shards and trains for a few steps. It does not download
+MONET or decode images.
 
 ```bash
 python scripts/create_toy_subset.py --output-dir data/processed/toy --num-samples 128
@@ -110,20 +107,14 @@ metrics.jsonl
 checkpoints/
 ```
 
-## Prepare A Small MONET Subset
+## Prepare MONET Latents
 
-MONET includes precomputed SANA DC-AE latents. This project trains on those latents so the generator can be small and understandable.
+MONET includes precomputed SANA DC-AE latents, so this project can train a small
+generator in latent space instead of directly on pixels.
 
 Before downloading MONET, review the dataset card and license terms linked in
 [docs/sources.md](docs/sources.md). If Hugging Face requires authentication in
-your environment, log in with the Hugging Face CLI or set `HF_TOKEN` before
-running the preparation script.
-
-Install data dependencies:
-
-```bash
-python -m pip install -e ".[data]"
-```
+your environment, log in with the Hugging Face CLI or set `HF_TOKEN`.
 
 Prepare a tiny probe:
 
@@ -151,7 +142,7 @@ python scripts/prepare_monet_subset.py \
   --min-least-dimension 512
 ```
 
-Split into train/validation:
+Split into train and validation shards:
 
 ```bash
 python scripts/split_subset.py \
@@ -161,9 +152,9 @@ python scripts/split_subset.py \
   --val-shards 1
 ```
 
-## Train Locally
+## Train
 
-Baseline:
+Baseline flow matching:
 
 ```bash
 python -m monet_flow.train --config configs/baseline.yaml
@@ -183,12 +174,6 @@ data/processed/monet_val/
 ```
 
 ## Sample A Checkpoint
-
-Install decode dependencies:
-
-```bash
-python -m pip install -e ".[decode]"
-```
 
 Generate and decode a grid:
 
@@ -213,7 +198,7 @@ The decoded grid is written to:
 samples/manual_baseline/grid.png
 ```
 
-## Track Progress Across Checkpoints
+## Track Progress
 
 Use the same prompts and the same initial noise for every checkpoint:
 
@@ -238,11 +223,33 @@ samples/progress/
   gallery.html
 ```
 
-## Optional Cloud Usage
+## Self-Flow-Lite
 
-The trainer supports `gs://` data and output paths when the `cloud` extra is installed.
+The baseline uses one timestep per image.
 
-Example cloud config:
+Self-Flow-lite changes the corruption pattern:
+
+```text
+normal flow:
+  every latent patch uses the same t
+
+self-flow-lite:
+  each latent patch can use a different t
+  some patches can be heavily corrupted
+  an auxiliary head reconstructs clean latent tokens
+```
+
+The goal is to push the model to use local context and text conditioning instead
+of only learning one uniform cleanup rule. In small matched runs, Self-Flow-lite
+can improve the velocity loss before the samples become prompt-coherent, so
+inspect loss and generated grids together.
+
+## Cloud Helpers
+
+The trainer supports `gs://` data and output paths when the `cloud` extra is
+installed.
+
+Example configs:
 
 ```text
 configs/baseline_gcs.yaml
@@ -250,7 +257,7 @@ configs/self_flow_lite_gcs.yaml
 configs/monet_probe_gcs_cpu.yaml
 ```
 
-Replace `REPLACE_WITH_BUCKET` with your own bucket path.
+Replace placeholder bucket paths with your own storage location.
 
 Sync local shards:
 
@@ -286,10 +293,6 @@ scripts/launch_gce_training.sh \
   gs://YOUR_BUCKET
 ```
 
-The GCE helper requires an explicit service account. Give that account only the
-storage/logging permissions it needs for your bucket and logs. Set
-`ACCESS_SCOPES` yourself if you intentionally need broader VM OAuth scopes.
-
 Submit a Vertex package job:
 
 ```bash
@@ -305,27 +308,24 @@ scripts/submit_vertex_package_job.sh \
   monet_flow.train
 ```
 
-The cloud scripts intentionally do not ship any project-specific defaults.
-
 See [docs/cloud.md](docs/cloud.md) for the same flow as a compact guide.
 
-## Self-Flow-Lite In This Repo
+## Data, Weights, And Credentials
 
-The baseline uses one timestep per image.
+This repo keeps generated artifacts out of git. Dataset shards, decoded samples,
+checkpoints, and model weights belong in local output folders or user-controlled
+storage.
 
-Self-Flow-lite changes the corruption pattern:
+Cloud configs use placeholders such as:
 
 ```text
-normal flow:
-  every latent patch uses the same t
-
-self-flow-lite:
-  each latent patch can use a different t
-  some patches can be heavily corrupted
-  an auxiliary head reconstructs clean latent tokens
+gs://REPLACE_WITH_BUCKET/...
 ```
 
-The goal is to make the model use context and text conditioning instead of only learning a uniform cleanup rule.
+Keep service-account files, tokens, private project ids, and bucket names outside
+the repository. The helper scripts read explicit environment variables such as
+`PROJECT_ID`, `BUCKET_NAME`, `SERVICE_ACCOUNT`, and `HF_TOKEN` when you provide
+them.
 
 ## Useful Commands
 
@@ -363,7 +363,9 @@ python scripts/diagnose_checkpoint_conditioning.py \
 
 ## Notes On Image Decoding
 
-The SANA DC-AE decoder expects latents to be divided by its configured scaling factor before decode. The decoder helper in `src/monet_flow/vae.py` handles this:
+The SANA DC-AE decoder expects latents to be divided by its configured scaling
+factor before decode. The decoder helper in `src/monet_flow/vae.py` handles
+this:
 
 ```python
 decoded = vae.decode(latents.float() / scaling_factor).sample
@@ -373,7 +375,7 @@ If decoded images look washed out or incorrectly scaled, check this path first.
 
 ## Sources And Attribution
 
-This repository uses MONET metadata/latents and compares against ideas from
+This repository uses MONET metadata and latents and compares against ideas from
 Self-Flow. See [docs/sources.md](docs/sources.md) for dataset, paper, and
 third-party project links. This repository does not redistribute MONET itself.
 
